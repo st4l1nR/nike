@@ -1,21 +1,23 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import client from "../lib/apolloClient";
+import client from "../../lib/apolloClient";
 import { gql } from "@apollo/client";
 import { useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
-import { addCartItem } from "../features/cartSlice";
+import { addCartItem } from "../../features/cartSlice";
 import Cookies from "js-cookie";
 import type { GetServerSideProps } from "next";
 import type {
   ProductEntity,
   ProductEntityResponseCollection,
   VariantEntity,
-} from "../generated/graphql";
-import type { RootState, AppDispatch } from "../store";
+  QueryProductsArgs,
+} from "../../generated/graphql";
+import type { RootState, AppDispatch } from "../../store";
 import { useSelector } from "react-redux";
 import { CircularProgress } from "@mui/material";
+import { useRouter } from "next/router";
 
 type props = {
   products: [ProductEntity];
@@ -27,11 +29,13 @@ type formData = {
   };
 };
 
-const index = ({ products }: props) => {
+const category = ({ products }: props) => {
   if (!products[0]) return <></>;
 
   const cart = useSelector((state: RootState) => state.cart);
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const {category} = router.query as any
   const [slide, setSlide] = useState(0);
   const product = products[slide];
   const [variant, setVaraint] = useState<VariantEntity | null>(null);
@@ -69,7 +73,7 @@ const index = ({ products }: props) => {
           variant.attributes.selectedOptions.size == selectedOptions.size)
     );
     setVaraint(variant);
-  }, [JSON.stringify(selectedOptions)]);
+  }, [JSON.stringify(selectedOptions), router.pathname]);
 
 
   const handleSlide = (action: "prev" | "next") => {
@@ -107,7 +111,7 @@ const index = ({ products }: props) => {
               >
                 {/*Description*/}
                 <div className="flex flex-col space-y-4 md:basis-2/5">
-                  <span className="text-lg font-bold">New Releases</span>
+                  <span className="text-lg font-bold">{category.toUpperCase()}</span>
                   <span className="text-4xl font-bold md:text-5xl">
                     {attributes.name}
                   </span>
@@ -204,6 +208,7 @@ const index = ({ products }: props) => {
                     </div>
                   ))}
                 </div>
+
               </div>
             )}
           </>
@@ -274,11 +279,10 @@ const index = ({ products }: props) => {
     </>
   );
 };
-
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const LIST_PRODUCT = gql`
-    query Products {
-      products(pagination: { limit: 10 }, sort: ["createdAt"]) {
+    query Products($filters: ProductFiltersInput) {
+      products(filters: $filters) {
         data {
           id
           attributes {
@@ -331,12 +335,35 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
   `;
 
+  const { category } = context.params;
+  const variables: QueryProductsArgs =
+    category === "new"
+      ? {
+          sort: ["createdAt"],
+          pagination: {
+            limit: 10,
+          },
+        }
+      : {
+          filters: {
+            categories: {
+              name: {
+                eq: category as string,
+              },
+            },
+          },
+        };
+
   const {
     data: { products },
-  } = await client.query<{
-    products: ProductEntityResponseCollection;
-  }>({
+  } = await client.query<
+    {
+      products: ProductEntityResponseCollection;
+    },
+    QueryProductsArgs
+  >({
     query: LIST_PRODUCT,
+    variables,
   });
 
   return {
@@ -346,4 +373,4 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   };
 };
 
-export default index;
+export default category;
