@@ -7,7 +7,9 @@ import {
   VariantEntity,
   MutationDeleteCartItemArgs,
   MutationUpdateCartItemArgs,
-  MutationEmptyCartArgs
+  MutationEmptyCartArgs,
+  QueryCartArgs,
+  MutationCreateCartArgs
 } from "../generated/graphql";
 import client from "../lib/apolloClient";
 import { gql } from "@apollo/client";
@@ -16,6 +18,115 @@ export interface CounterState {
   value: CartEntity | null;
   status: "loading" | "fullfill" | "error" | null;
 }
+
+const GET_CART = gql`
+  query getCart($id: ID) {
+    cart(id: $id) {
+      data {
+        id
+        attributes {
+          cartItems {
+            id
+            name
+            quantity
+            image {
+              data {
+                id
+                attributes {
+                  url
+                }
+              }
+            }
+            variant {
+              data {
+                id
+                attributes {
+                  name
+                  price
+                  description
+                  image {
+                    data {
+                      id
+                      attributes {
+                        url
+                      }
+                    }
+                  }
+                  selectedOptions
+                }
+              }
+            }
+            product {
+              data {
+                id
+                attributes {
+                  description
+                }
+              }
+            }
+            price
+          }
+          total
+        }
+      }
+    }
+  }
+`;
+
+const CREATE_CART = gql`
+  mutation CreateCart($data: CartInput!) {
+    createCart(data: $data) {
+      data {
+        id
+        attributes {
+          cartItems {
+            id
+            name
+            quantity
+            image {
+              data {
+                id
+                attributes {
+                  url
+                }
+              }
+            }
+            variant {
+              data {
+                id
+                attributes {
+                  name
+                  price
+                  description
+                  image {
+                    data {
+                      id
+                      attributes {
+                        url
+                      }
+                    }
+                  }
+                  selectedOptions
+                }
+              }
+            }
+            product {
+              data {
+                id
+                attributes {
+                  description
+                }
+              }
+            }
+            price
+          }
+          total
+        }
+      }
+    }
+  }
+`;
+
 
 const ADD_CART_ITEM = gql`
   mutation AddCartItem($id: ID!, $cartItem: ComponentProductCartItemInput!) {
@@ -125,6 +236,7 @@ const DELETE_CART_ITEM = gql`
   }
 `;
 
+
 const UPDATE_CART_ITEM = gql`
   mutation UpdateCartItem($id: ID!, $cartItemId: ID!, $quantity: Int!) {
     updateCartItem(id: $id, cartItemId: $cartItemId, quantity: $quantity) {
@@ -195,6 +307,23 @@ const EMPTY_CART = gql`
   }
 `;
 
+export const getCart = createAsyncThunk('cart/get', async (id:string) => {
+  const {data:{cart}} = await  client.query<{cart:CartEntityResponse}, QueryCartArgs>({
+    query:GET_CART,
+    variables:{
+      id
+    }
+  })
+  return cart.data
+})
+
+export const createCart = createAsyncThunk('cart/create', async(variables:MutationCreateCartArgs) => {
+  const {data:{createCart}} = await client.mutate<{createCart:CartEntityResponse}, MutationCreateCartArgs>({
+    mutation:CREATE_CART,
+    variables
+  })
+  return createCart.data
+})
 
 type addCartItemsArgs = {
   id: string;
@@ -300,6 +429,36 @@ const cartSlice = createSlice({
     },
   },
   extraReducers: {
+    //getCart
+    [getCart.pending.type]: (state) => {
+      state.status = "loading";
+    },
+    [getCart.fulfilled.type]: (
+      state,
+      { payload }: PayloadAction<CartEntity>
+    ) => {
+      state.value = payload;
+      state.status = "fullfill";
+    },
+    [getCart.rejected.type]: (state) => {
+      state.status = "error";
+    },
+
+    //createCart
+    [createCart.pending.type]: (state) => {
+      state.status = "loading";
+    },
+    [createCart.fulfilled.type]: (
+      state,
+      { payload }: PayloadAction<CartEntity>
+    ) => {
+      state.value = payload;
+      state.status = "fullfill";
+    },
+    [createCart.rejected.type]: (state) => {
+      state.status = "error";
+    },
+
     //addCartItem
     [addCartItem.pending.type]: (state) => {
       state.status = "loading";

@@ -17,115 +17,8 @@ import {
 import store from "../store";
 import { Provider } from "react-redux";
 import { useDispatch } from "react-redux";
-import { setCart } from "../features/cartSlice";
+import { setCart, getCart, createCart } from "../features/cartSlice";
 
-const GET_CART = gql`
-  query getCart($id: ID) {
-    cart(id: $id) {
-      data {
-        id
-        attributes {
-          cartItems {
-            id
-            name
-            quantity
-            image {
-              data {
-                id
-                attributes {
-                  url
-                }
-              }
-            }
-            variant {
-              data {
-                id
-                attributes {
-                  name
-                  price
-                  description
-                  image {
-                    data {
-                      id
-                      attributes {
-                        url
-                      }
-                    }
-                  }
-                  selectedOptions
-                }
-              }
-            }
-            product {
-              data {
-                id
-                attributes {
-                  description
-                }
-              }
-            }
-            price
-          }
-          total
-        }
-      }
-    }
-  }
-`;
-
-const CREATE_CART = gql`
-  mutation CreateCart($data: CartInput!) {
-    createCart(data: $data) {
-      data {
-        id
-        attributes {
-          cartItems {
-            id
-            name
-            quantity
-            image {
-              data {
-                id
-                attributes {
-                  url
-                }
-              }
-            }
-            variant {
-              data {
-                id
-                attributes {
-                  name
-                  price
-                  description
-                  image {
-                    data {
-                      id
-                      attributes {
-                        url
-                      }
-                    }
-                  }
-                  selectedOptions
-                }
-              }
-            }
-            product {
-              data {
-                id
-                attributes {
-                  description
-                }
-              }
-            }
-            price
-          }
-        }
-        total
-      }
-    }
-  }
-`;
 
 function MyApp({ Component, pageProps }: AppProps) {
   const stripePromise = loadStripe(
@@ -135,36 +28,15 @@ function MyApp({ Component, pageProps }: AppProps) {
     const retrieveCart = async () => {
       const cartId = Cookies.get("cart");
       if (!cartId) {
-        const {
-          data: { createCart },
-        } = await client.mutate<
-          {
-            createCart: CartEntityResponse;
-          },
-          MutationCreateCartArgs
-        >({
-          mutation: CREATE_CART,
-          variables: {
-            data: {},
-          },
-        });
-        Cookies.set("cart", createCart.data.id);
-        store.dispatch(setCart(createCart.data));
+        await store.dispatch(createCart({data:{}}))
+        Cookies.set("cart", store.getState().cart.value.id);
+
       } else {
-        const {
-          data: { cart },
-        } = await client.query<
-          {
-            cart: CartEntityResponse;
-          },
-          QueryCartArgs
-        >({
-          query: GET_CART,
-          variables: {
-            id: cartId,
-          },
-        });
-        store.dispatch(setCart(cart.data));
+        await store.dispatch(getCart(cartId))
+        if (!store.getState().cart.value) await store.dispatch(createCart({data:{}}))
+        Cookies.remove("cart")
+        Cookies.set("cart", store.getState().cart.value.id)
+      
       }
     };
     retrieveCart();

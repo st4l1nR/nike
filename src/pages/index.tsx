@@ -98,7 +98,7 @@ const index = ({ products }: props) => {
   return (
     <>
       <div className="max-w-7xl mx-auto flex flex-col md:h-[80vh]">
-        {products.map(({ id, attributes }, idx) => (
+        {products.map(({ attributes }, idx) => (
           <>
             {slide === idx && (
               <div
