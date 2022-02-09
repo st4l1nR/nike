@@ -37,7 +37,10 @@ const index = ({ products }: props) => {
   const [variant, setVaraint] = useState<VariantEntity | null>(null);
   const colors = product?.attributes.options
     .find((option) => option.name === "color")
-    ?.values.map((value) => `bg-${value.name}-500`);
+    ?.values.map((value) => {
+      if (value.name == "black" || value.name == "white") return `bg-${value.name}`
+      return `bg-${value.name}-400`
+    });
   const {
     register,
     watch,
@@ -70,7 +73,6 @@ const index = ({ products }: props) => {
     );
     setVaraint(variant);
   }, [JSON.stringify(selectedOptions)]);
-
 
   const handleSlide = (action: "prev" | "next") => {
     let number;
@@ -123,10 +125,9 @@ const index = ({ products }: props) => {
                       key={product.id}
                       unoptimized={true}
                       src={
-                        process.env.NEXT_PUBLIC_API +
-                        (variant?.attributes.image.data?.attributes
+                        variant?.attributes.image.data?.attributes
                           ? variant.attributes.image.data.attributes.url
-                          : attributes.image.data.attributes.url)
+                          : attributes.image.data.attributes.url
                       }
                       layout="fill"
                       objectFit="cover"

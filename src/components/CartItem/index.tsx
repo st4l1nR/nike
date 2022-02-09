@@ -18,17 +18,16 @@ const index = ({
   variant,
   product,
   quantity,
-  price
+  price,
 }: props) => {
   const dispatch = useDispatch<AppDispatch>();
-
 
   return (
     <div className="relative flex flex-col space-y-3 md:flex-row md:space-x-4">
       <div className="relative h-36 md:basis-2/4">
         <Image
           unoptimized={true}
-          src={process.env.NEXT_PUBLIC_API + image.data?.attributes.url}
+          src={image.data?.attributes.url}
           layout="fill"
           objectFit="contain"
         />

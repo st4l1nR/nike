@@ -12,7 +12,7 @@ import Image from "next/image";
 import { useMutation, gql } from "@apollo/client";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { emptyCart } from "../../features/cartSlice";
-import {createOrder} from '../../features/orderSlice'
+import { createOrder } from "../../features/orderSlice";
 import { useRouter } from "next/router";
 
 import {
@@ -48,7 +48,7 @@ const CREATE_PAYMENT_INTENT = gql`
 const checkout = ({ shippings }: props) => {
   const dispatch = useDispatch<AppDispatch>();
   const cart = useSelector((state: RootState) => state.cart.value);
-  const router = useRouter()
+  const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
 
@@ -108,13 +108,14 @@ const checkout = ({ shippings }: props) => {
     );
     if (error) return;
 
-    await dispatch(createOrder({
-      data
-    }))
+    await dispatch(
+      createOrder({
+        data,
+      })
+    );
 
-    await dispatch(emptyCart(cart.id))
-    router.push('/checkout/success')
-
+    await dispatch(emptyCart(cart.id));
+    router.push("/checkout/success");
 
     setLoading(false);
   };
@@ -162,10 +163,14 @@ const checkout = ({ shippings }: props) => {
                     <TextField
                       placeholder="Email"
                       error={errors.email?.message}
-                      {...register("email", { required: "Required", pattern:{
-                        value:/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
-                        message:"Invalid email"
-                      }})}
+                      {...register("email", {
+                        required: "Required",
+                        pattern: {
+                          value:
+                            /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/,
+                          message: "Invalid email",
+                        },
+                      })}
                     />
                   </div>
                   <div className="basis-1/2">
@@ -174,10 +179,11 @@ const checkout = ({ shippings }: props) => {
                       error={errors.phoneNumber?.message}
                       {...register("phoneNumber", {
                         required: "Required",
-                        pattern:{
-                          value:/^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
-                          message:"Invalid phone number"
-                        }
+                        pattern: {
+                          value:
+                            /^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
+                          message: "Invalid phone number",
+                        },
                       })}
                     />
                   </div>
@@ -356,10 +362,7 @@ const checkout = ({ shippings }: props) => {
                           <div className="relative h-36 md:basis-2/4">
                             <Image
                               unoptimized={true}
-                              src={
-                                process.env.NEXT_PUBLIC_API +
-                                image.data.attributes.url
-                              }
+                              src={image.data.attributes.url}
                               layout="fill"
                               objectFit="contain"
                             />

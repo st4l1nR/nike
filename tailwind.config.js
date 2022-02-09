@@ -13,14 +13,18 @@ module.exports = {
       colors: {
         sky: "#F6F6F6",
         brown: {
-          500: "#78350f",
+          400: "#92400E",
         },
       },
     },
-    
   },
   safelist: [
-    {pattern: /bg-(brown|green|blue|pink|gray|yellow|purple|red)-(500|300)/}
+    "bg-black",
+    "bg-white",
+    {
+      pattern:
+        /bg-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|brown)-(100|200|300|400|500|600|700|800|900)/,
+    },
   ],
   variants: {},
   plugins: [require("@tailwindcss/forms")],

@@ -6,6 +6,7 @@ import {useRouter} from 'next/router'
 const success = () => {
   const order = useSelector((state: RootState) => state.order.value);
   const router = useRouter()
+
   
   useEffect(() => {
     if (!order) router.push('/')

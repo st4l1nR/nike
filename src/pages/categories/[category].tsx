@@ -35,13 +35,18 @@ const category = ({ products }: props) => {
   const cart = useSelector((state: RootState) => state.cart);
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const {category} = router.query as any
+  const { category } = router.query as any;
   const [slide, setSlide] = useState(0);
   const product = products[slide];
   const [variant, setVaraint] = useState<VariantEntity | null>(null);
   const colors = product?.attributes.options
     .find((option) => option.name === "color")
-    ?.values.map((value) => `bg-${value.name}-500`);
+    ?.values.map((value) => {
+      if (value.name == "black" || value.name == "white")
+        return `bg-${value.name}`;
+      return `bg-${value.name}-400`;
+    });
+
   const {
     register,
     watch,
@@ -65,7 +70,7 @@ const category = ({ products }: props) => {
   const selectedOptions = watch("selectedOptions");
 
   useEffect(() => {
-    const variant = product.attributes.variants.data?.find(
+    const variant = product?.attributes.variants.data?.find(
       (variant) =>
         (variant.attributes.selectedOptions.color == selectedOptions.color &&
           variant.attributes.selectedOptions.size == selectedOptions.size) ||
@@ -73,8 +78,22 @@ const category = ({ products }: props) => {
           variant.attributes.selectedOptions.size == selectedOptions.size)
     );
     setVaraint(variant);
-  }, [JSON.stringify(selectedOptions), router.pathname]);
+  }, [JSON.stringify(selectedOptions)]);
 
+  useEffect(() => {
+    reset({
+      selectedOptions: products[0].attributes.variants.data[0]
+        ? {
+            color: products[0].attributes.options.find(
+              (option) => option.name === "color"
+            )?.values[0].name,
+            size: products[0].attributes.options.find(
+              (option) => option.name === "size"
+            )?.values[0].name,
+          }
+        : null,
+    });
+  }, [category]);
 
   const handleSlide = (action: "prev" | "next") => {
     let number;
@@ -111,7 +130,9 @@ const category = ({ products }: props) => {
               >
                 {/*Description*/}
                 <div className="flex flex-col space-y-4 md:basis-2/5">
-                  <span className="text-lg font-bold">{category.toUpperCase()}</span>
+                  <span className="text-lg font-bold">
+                    {category.toUpperCase()}
+                  </span>
                   <span className="text-4xl font-bold md:text-5xl">
                     {attributes.name}
                   </span>
@@ -124,13 +145,12 @@ const category = ({ products }: props) => {
                 <div className="flex flex-col md:basis-3/5">
                   <div className="relative w-full h-64  md:h-[400px]">
                     <Image
-                      key={product.id}
+                      key={product?.id}
                       unoptimized={true}
                       src={
-                        process.env.NEXT_PUBLIC_API +
-                        (variant?.attributes.image.data?.attributes
+                        variant?.attributes.image.data?.attributes
                           ? variant.attributes.image.data.attributes.url
-                          : attributes.image.data.attributes.url)
+                          : attributes.image.data.attributes.url
                       }
                       layout="fill"
                       objectFit="cover"
@@ -174,9 +194,7 @@ const category = ({ products }: props) => {
                           <>
                             {option.name === "color" ? (
                               <input
-                                className={`w-10 h-10 rounded-full cursor-pointer ${
-                                  value.name == "black" ? "black" : colors[idx]
-                                }`}
+                                className={`w-10 h-10 rounded-full cursor-pointer ${colors[idx]}`}
                                 type="radio"
                                 value={value.name}
                                 {...register(`selectedOptions.${option.name}`, {
@@ -208,7 +226,6 @@ const category = ({ products }: props) => {
                     </div>
                   ))}
                 </div>
-
               </div>
             )}
           </>
@@ -250,7 +267,7 @@ const category = ({ products }: props) => {
               {cart.status === "loading" ? (
                 <CircularProgress size={30} color="inherit" />
               ) : (
-                `ADD TO CART - $${product.attributes.price}`
+                `ADD TO CART - $${product?.attributes.price}`
               )}
             </div>
           </div>
@@ -272,7 +289,7 @@ const category = ({ products }: props) => {
           {cart.status === "loading" ? (
             <CircularProgress size={30} color="inherit" />
           ) : (
-            `ADD TO CART - $${product.attributes.price}`
+            `ADD TO CART - $${product?.attributes.price}`
           )}
         </div>
       </div>
